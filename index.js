@@ -44,3 +44,156 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+async function run() {
+  try {
+    const testimonialCollection = client
+      .db("collaborIQ")
+      .collection("testimonial");
+    const assignmentCollection = client
+      .db("collaborIQ")
+      .collection("assignments");
+    const submissionsCollection = client
+      .db("collaborIQ")
+      .collection("submissions");
+
+    // auth related APIs
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "10h",
+      });
+
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
+    app.post("/logout", (req, res) => {
+      res
+        .clearCookie("token", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
+    // Get All Assignments
+    app.get("/assignments", async (req, res) => {
+      const result = await assignmentCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const user = await assignmentCollection.findOne(query);
+      res.send(user);
+    });
+
+    app.post("/assignments", async (req, res) => {
+      const newJob = req.body;
+      const result = await assignmentCollection.insertOne(newJob);
+      res.status(201).send(result);
+    });
+
+    app.put("/assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatingData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: updatingData,
+      };
+      const result = await assignmentCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.delete("/assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const { email } = req.body;
+      const query = { _id: new ObjectId(id) };
+      const assignment = await assignmentCollection.findOne(query);
+
+      if (!assignment) {
+        return res.status(404).send({ error: "Assignment not found" });
+      }
+
+      if (assignment.userEmail !== email) {
+        return res.status(403).send({
+          error: "Unauthorized: You can only delete assignments you created.",
+        });
+      }
+
+      // Delete the assignment
+      const result = await assignmentCollection.deleteOne(query);
+
+      if (result.deletedCount > 0) {
+        res.status(200).send({ message: "Assignment deleted successfully" });
+      } else {
+        res.status(500).send({ error: "Failed to delete the assignment" });
+      }
+    });
+
+    // Get All Testimonials
+    app.get("/testimonial", async (req, res) => {
+      const result = await testimonialCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/testimonial", async (req, res) => {
+      const newJob = req.body;
+      const result = await testimonialCollection.insertOne(newJob);
+      res.send(result);
+    });
+
+    app.get("/submissions", verifyToken, async (req, res) => {
+      const currentUserEmail = req.user.email;
+
+      // Query to fetch submissions only for the current user
+      const query = {
+        user_email: currentUserEmail,
+      };
+
+      try {
+        const result = await submissionsCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to fetch submissions" });
+      }
+    });
+
+    // Get All Pending Submissions Excluding the Logged-in User's Submissions
+    app.get("/submissions/pending", verifyToken, async (req, res) => {
+      const currentUserEmail = req.user.email;
+      const query = {
+        status: "Pending",
+        user_email: { $ne: currentUserEmail },
+      };
+
+      try {
+        const result = await submissionsCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ message: "Failed to fetch pending submissions" });
+      }
+    });
+
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+  }
+}

@@ -190,6 +190,18 @@ async function run() {
       }
     });
 
+    app.get("/submissions/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { assignment_id: id };
+
+      try {
+        const result = await submissionsCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Error fetching submissions" });
+      }
+    });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );

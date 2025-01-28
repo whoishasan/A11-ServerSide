@@ -237,3 +237,67 @@ async function run() {
     console.error("Error connecting to MongoDB:", error);
   }
 }
+
+// Run the database connection setup
+run().catch(console.dir);
+
+app.get("/", (req, res) => {
+  res.send(`<!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>StudyHive Server</title>
+      <style>
+          body {
+              margin: 0;
+              font-family: Arial, sans-serif;
+              background: linear-gradient(135deg, #0a9396, #94d2bd);
+              color: #fefae0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+          }
+          .container {
+              text-align: center;
+          }
+          h1 {
+              font-size: 3rem;
+              margin-bottom: 10px;
+          }
+          p {
+              font-size: 1.5rem;
+              margin-top: 0;
+          }
+          .status {
+              margin-top: 20px;
+              padding: 10px 20px;
+              border-radius: 5px;
+              background-color: #e9d8a6;
+              color: #005f73;
+              font-weight: bold;
+              font-size: 1.2rem;
+              display: inline-block;
+              animation: blink 1.5s linear infinite;
+          }
+          @keyframes blink {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <h1>StudyHive Server</h1>
+          <p>Your server is up and running!</p>
+          <div class="status">Server is Running</div>
+      </div>
+  </body>
+  </html>
+  `);
+});
+
+app.listen(port, () => {
+  console.log(`StudyHive Server running on ${port}`);
+});

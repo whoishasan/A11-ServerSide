@@ -215,6 +215,21 @@ async function run() {
       res.send({ insertedId: result.insertedId });
     });
 
+    app.put("/submissions/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatingData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: updatingData,
+      };
+      const result = await submissionsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );

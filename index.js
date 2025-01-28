@@ -36,3 +36,11 @@ const verifyToken = (req, res, next) => {
 };
 
 const uri = `mongodb+srv://${process.env.STUDY_HIVE_USER}:${process.env.STUDY_HIVE_USER_PASS}@study-hive.bc9rt.mongodb.net/?retryWrites=true&w=majority&appName=study-hive`;
+
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});

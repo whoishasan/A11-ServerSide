@@ -202,6 +202,19 @@ async function run() {
       }
     });
 
+    app.post("/submissions", async (req, res) => {
+      const { assignment_id, user_email, googleDocsLink, quickNote, status } =
+        req.body;
+      const result = await submissionsCollection.insertOne({
+        assignment_id,
+        user_email,
+        googleDocsLink,
+        quickNote,
+        status,
+      });
+      res.send({ insertedId: result.insertedId });
+    });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );

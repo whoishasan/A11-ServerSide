@@ -34,3 +34,5 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
+
+const uri = `mongodb+srv://${process.env.STUDY_HIVE_USER}:${process.env.STUDY_HIVE_USER_PASS}@study-hive.bc9rt.mongodb.net/?retryWrites=true&w=majority&appName=study-hive`;
